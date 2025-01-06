@@ -9,8 +9,9 @@ SCREEN_HEIGHT = 1080
 FPS = 60
 
 #Track segment probabilities
-STRAIGHT_PROBABILITY = 0.9
-RIGHT_TURN_PROBABILITY = 0.05
+STRAIGHT_PROBABILITY = 0.8
+TURNS = ['NORTH EAST', 'NORTH WEST'
+
 
 #Game class
 class Game:
@@ -186,25 +187,32 @@ class Track:
     
     def generate_track(self):
         # Generate track segments based on pre-defined probabilities
-        for _ in range(30):
+        y_offset = 0
+        x_offset = 0
+        for j in range(7):
+            self.track_segments.append('straight')
+        for i in range(30):
             probability = random.random()
             if probability < STRAIGHT_PROBABILITY:
                 self.track_segments.append('straight')
             elif probability < RIGHT_TURN_PROBABILITY:
-                self.track_segments.append('right turn')
+                self.track_segments.append('north east turn')
             else:
-                self.track_segments.append('left turn')
-                
-    def run(self):
-        y_offset = 0
-        x_offset = 0
-        for segment in self.track_segments:
-            if segment == 'straight':
+                self.track_segments.append('north west turn')
+            if self.track_segments[i] == 'straight':
                 tracks = pygame.image.load('C:/NEA/NEA sprites/Straight.png').convert_alpha()
+                x_offset += 
+                y_offset +=
+            elif self.track_segments[i] == 'straight':
+                tracks = pygame.image.load('C:/NEA/NEA sprites/Turn.png').convert_alpha() 
                 x_offset +=
                 y_offset +=
-            elif segment == 'right turn':
+            elif self.track_segments[i] == 'straight':
                 tracks = pygame.image.load('C:/NEA/NEA sprites/Turn.png').convert_alpha() 
+                x_offset +=
+                y_offset +=
+            elif self.track_segments[i] == 'straight':
+            tracks = pygame.image.load('C:/NEA/NEA sprites/Turn.png').convert_alpha() 
                 x_offset +=
                 y_offset +=
             else:
@@ -220,3 +228,4 @@ if __name__ == '__main__':
     #runs the game
     game.run()
 https://www.geeksforgeeks.org/car-race-game-in-pygame/
+https://stackoverflow.com/questions/66753321/best-way-to-create-a-2d-top-down-race-track-procedurally
