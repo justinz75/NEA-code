@@ -10,7 +10,7 @@ FPS = 60
 
 #Track segment probabilities
 STRAIGHT_PROBABILITY = 0.9
-TURN_PROBABILITY = 0.1
+RIGHT_TURN_PROBABILITY = 0.05
 
 #Game class
 class Game:
@@ -185,24 +185,34 @@ class Track:
         self.generate_track()
     
     def generate_track(self):
-        # Generate track segments based on probabilities
-        for _ in range(30):  # Adjust the range for the desired track length
-            if random.random() < STRAIGHT_PROBABILITY:
+        # Generate track segments based on pre-defined probabilities
+        for _ in range(30):
+            probability = random.random()
+            if probability < STRAIGHT_PROBABILITY:
                 self.track_segments.append('straight')
+            elif probability < RIGHT_TURN_PROBABILITY:
+                self.track_segments.append('right turn')
             else:
-                self.track_segments.append('turn')
-    
-    #displays the results
+                self.track_segments.append('left turn')
+                
     def run(self):
         y_offset = 0
+        x_offset = 0
         for segment in self.track_segments:
             if segment == 'straight':
                 tracks = pygame.image.load('C:/NEA/NEA sprites/Straight.png').convert_alpha()
+                x_offset +=
+                y_offset +=
+            elif segment == 'right turn':
+                tracks = pygame.image.load('C:/NEA/NEA sprites/Turn.png').convert_alpha() 
+                x_offset +=
+                y_offset +=
             else:
-                tracks = pygame.image.load('C:/NEA/NEA sprites/Turn.png').convert_alpha()
-            tracks = pygame.transform.scale(tracks, (SCREEN_WIDTH, SCREEN_HEIGHT // len(self.track_segments)))
-            self.display.blit(background_image, (0, y_offset))
-            y_offset += (SCREEN_HEIGHT // len(self.track_segments))
+                tracks = pygame.image.load('C:/NEA/NEA sprites/Turn.png').convert_alpha() 
+                x_offset +=
+                y_offset +=
+            self.display.blit(tracks, (x_offset, y_offset))
+
         
 if __name__ == '__main__':
     #creates object 'game' of class Game
