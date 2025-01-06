@@ -197,12 +197,12 @@ class Track:
         y_offset = 0
         for segment in self.track_segments:
             if segment == 'straight':
-                background_image = pygame.image.load('C:/NEA/NEA sprites/Straight.png').convert_alpha()
+                tracks = pygame.image.load('C:/NEA/NEA sprites/Straight.png').convert_alpha()
             else:
-                background_image = pygame.image.load('C:/NEA/NEA sprites/Turn.png').convert_alpha()
-            background_image = pygame.transform.scale(background_image, (SCREEN_WIDTH, SCREEN_HEIGHT // len(self.track_segments)))
+                tracks = pygame.image.load('C:/NEA/NEA sprites/Turn.png').convert_alpha()
+            tracks = pygame.transform.scale(tracks, (SCREEN_WIDTH, SCREEN_HEIGHT // len(self.track_segments)))
             self.display.blit(background_image, (0, y_offset))
-            y_offset += SCREEN_HEIGHT // len(self.track_segments)
+            y_offset += (SCREEN_HEIGHT // len(self.track_segments))
         
 if __name__ == '__main__':
     #creates object 'game' of class Game
