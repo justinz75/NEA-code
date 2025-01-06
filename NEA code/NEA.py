@@ -9,9 +9,8 @@ SCREEN_HEIGHT = 1080
 FPS = 60
 
 #Track segment probabilities
-STRAIGHT_PROBABILITY = 0.8
-TURNS = ['NORTH EAST', 'NORTH WEST', 'SOUTH EAST', 'SOUTH WEST']
-
+STRAIGHT_PROBABILITY = 0.9
+TURNS = ['TOP RIGHT', 'TOP LEFT', 'BOTTOM LEFT', 'BOTTOM RIGHT']
 
 #Game class
 class Game:
@@ -66,7 +65,8 @@ class Game:
                 self.gameStateManager.set_state('main menu')
             if self.key[pygame.K_c] and self.gameStateManager.get_state() == 'menu':
                 self.gameStateManager.set_state('play')
-                self.play.track.run()
+                self.screen.fill((255, 255, 255))
+                self.play.track.generate_track()
             #run game states
             self.states[self.gameStateManager.get_state()].run()
             #pygame.draw.rect(self.display, (0, 0, 0), self.results_button)
@@ -171,62 +171,83 @@ class Playing:
     def __init__(self, display, gameStateManager):
         self.display = display
         self.gameStateManager = gameStateManager
-        self.track = Track(self.display, self.gameStateManager)
+        self.track = Track(self.display)
     #displays the results
     def run(self):
-        self.track.run()
+        self.track.generate_track()
 
 #Track class
 class Track:
-    #initialises display and gameStateManager
-    def __init__(self, display, gameStateManager):
+    #initialises display
+    def __init__(self, display):
         self.display = display
-        self.gameStateManager = gameStateManager
-        self.track_segments = []
-        self.generate_track()
     
+    #generates the track
     def generate_track(self):
-        # Generate track segments based on pre-defined probabilities
-        y_offset = 0
-        x_offset = 0
-        for j in range(7):
-            self.track_segments.append('straight')
-        for i in range(30):
-            probability = random.random()
-            if probability < STRAIGHT_PROBABILITY:
-                self.track_segments.append('straight')
-            else:
-                selected_track_element = random.choice(TURNS)
-                if selected_track_element == 'NORTH EAST':
-                    self.track_segments.append('north east turn')
-                elif selected_track_element == 'NORTH WEST':
-                    self.track_segments.append('north west turn')
-                elif selected_track_element == 'SOUTH EAST':
-                    self.track_segments.append('south east turn')
-                elif selected_track_elements == 'SOUTH WEST':
-                    self.track_segments.append('south west turn')
-                if self.track_segments[i] == 'straight' and (self.track_segments[i-1] == 'north east turn' or self.track_segments[i-1] == 'south east turn'):
-                    tracks = pygame.image.load('C:/NEA/NEA sprites/Straight.png').convert_alpha()
-                    x_offset += 
-                    y_offset +=
-                elif self.track_segments[i] == 'straight' and (self.track_segments[i-1] == 'north west turn' or self.track_segments[i-1] == 'south west turn'):
-                tracks = pygame.image.load('C:/NEA/NEA sprites/Turn.png').convert_alpha() 
-                x_offset +=
-                y_offset +=
-            elif self.track_segments[i] == 'straight':
-                tracks = pygame.image.load('C:/NEA/NEA sprites/Turn.png').convert_alpha() 
-                x_offset +=
-                y_offset +=
-            elif self.track_segments[i] == 'straight':
-            tracks = pygame.image.load('C:/NEA/NEA sprites/Turn.png').convert_alpha() 
-                x_offset +=
-                y_offset +=
-            else:
-                tracks = pygame.image.load('C:/NEA/NEA sprites/Turn.png').convert_alpha() 
-                x_offset +=
-                y_offset +=
+        #defining track coordinates
+        x_offset = 740
+        y_offset = 540
+        #initialising direction
+        direction = True
+        #starting track segments
+        for i in range(2):
+            tracks = pygame.image.load('C:/NEA/NEA sprites/Straight horizontal.png').convert_alpha()
             self.display.blit(tracks, (x_offset, y_offset))
-
+            #incrementing x_offset (allowing the track segments to connect to each other)
+            x_offset += 110
+        #Generate track segments based on pre-defined probabilities
+        for j in range(3):
+            #random float number between 0 and 1
+            probability = random.random()
+            #creating a horizontal track segment
+            if probability < STRAIGHT_PROBABILITY and direction:
+                tracks = pygame.image.load('C:/NEA/NEA sprites/Straight horizontal.png').convert_alpha()
+                x_offset += 110
+                self.display.blit(tracks, (x_offset, y_offset))
+            #creating a vertical track segment
+            elif probability < STRAIGHT_PROBABILITY and not direction:
+                    tracks = pygame.image.load('C:/NEA/NEA sprites/Straight vertical.png').convert_alpha() 
+                    y_offset += 110
+                    self.display.blit(tracks, (x_offset, y_offset))
+            else:
+                #randomly choose a track segment from the list of turns
+                selected_track_element = random.choice(TURNS)
+                #creating a top right turn track segment
+                if selected_track_element == 'TOP RIGHT':
+                    tracks = pygame.image.load('C:/NEA/NEA sprites/Top right turn.png').convert_alpha()
+                    self.display.blit(tracks, (x_offset, y_offset))
+                    #changing the direction that the straight track segments will face
+                    direction = not direction
+                    #changing the x and y offsets to allow the track segments to connect to each other
+                    x_offset += 186
+                    y_offset += 199
+                #creating a top left turn track segment
+                elif selected_track_element == 'TOP LEFT':
+                    tracks = pygame.image.load('C:/NEA/NEA sprites/Top left turn.png').convert_alpha()
+                    self.display.blit(tracks, (x_offset, y_offset))
+                    #changing the direction that the straight track segments will face
+                    direction = not direction
+                    #changing the x and y offsets to allow the track segments to connect to each other
+                    x_offset -= 186
+                    y_offset += 199
+                #creating a bottom left turn track segment
+                elif selected_track_element == 'BOTTOM LEFT':
+                    tracks = pygame.image.load('C:/NEA/NEA sprites/Bottom left turn.png').convert_alpha()
+                    self.display.blit(tracks, (x_offset, y_offset))
+                    #changing the direction that the straight track segments will face
+                    direction = not direction
+                    #changing the x and y offsets to allow the track segments to connect to each other
+                    x_offset -= 186
+                    y_offset -= 199
+                #creating a bottom right turn track segment
+                elif selected_track_element == 'BOTTOM RIGHT':
+                    tracks = pygame.image.load('C:/NEA/NEA sprites/Bottom right turn.png').convert_alpha()
+                    self.display.blit(tracks, (x_offset, y_offset))
+                    #changing the direction that the straight track segments will face
+                    direction = not direction
+                    #changing the x and y offsets to allow the track segments to connect to each other
+                    x_offset += 186
+                    y_offset -= 199
         
 if __name__ == '__main__':
     #creates object 'game' of class Game
