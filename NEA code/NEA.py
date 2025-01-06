@@ -10,7 +10,7 @@ FPS = 60
 
 #Track segment probabilities
 STRAIGHT_PROBABILITY = 0.8
-TURNS = ['NORTH EAST', 'NORTH WEST'
+TURNS = ['NORTH EAST', 'NORTH WEST', 'SOUTH EAST', 'SOUTH WEST']
 
 
 #Game class
@@ -195,15 +195,21 @@ class Track:
             probability = random.random()
             if probability < STRAIGHT_PROBABILITY:
                 self.track_segments.append('straight')
-            elif probability < RIGHT_TURN_PROBABILITY:
-                self.track_segments.append('north east turn')
             else:
-                self.track_segments.append('north west turn')
-            if self.track_segments[i] == 'straight':
-                tracks = pygame.image.load('C:/NEA/NEA sprites/Straight.png').convert_alpha()
-                x_offset += 
-                y_offset +=
-            elif self.track_segments[i] == 'straight':
+                selected_track_element = random.choice(TURNS)
+                if selected_track_element == 'NORTH EAST':
+                    self.track_segments.append('north east turn')
+                elif selected_track_element == 'NORTH WEST':
+                    self.track_segments.append('north west turn')
+                elif selected_track_element == 'SOUTH EAST':
+                    self.track_segments.append('south east turn')
+                elif selected_track_elements == 'SOUTH WEST':
+                    self.track_segments.append('south west turn')
+                if self.track_segments[i] == 'straight' and (self.track_segments[i-1] == 'north east turn' or self.track_segments[i-1] == 'south east turn'):
+                    tracks = pygame.image.load('C:/NEA/NEA sprites/Straight.png').convert_alpha()
+                    x_offset += 
+                    y_offset +=
+                elif self.track_segments[i] == 'straight' and (self.track_segments[i-1] == 'north west turn' or self.track_segments[i-1] == 'south west turn'):
                 tracks = pygame.image.load('C:/NEA/NEA sprites/Turn.png').convert_alpha() 
                 x_offset +=
                 y_offset +=
