@@ -199,13 +199,15 @@ class Track:
         for j in range(3):
             #random float number between 0 and 1
             probability = random.random()
-            #creating a horizontal track segment
-            if probability < STRAIGHT_PROBABILITY and direction:
-                tracks = pygame.image.load('C:/NEA/NEA sprites/Straight horizontal.png').convert_alpha()
-                x_offset += 110
-                self.display.blit(tracks, (x_offset, y_offset))
-            #creating a vertical track segment
-            elif probability < STRAIGHT_PROBABILITY and not direction:
+            #if the probability is less than the straight probability
+            if probability < STRAIGHT_PROBABILITY:
+                #creating a horizontal track segment
+                if direction:
+                    tracks = pygame.image.load('C:/NEA/NEA sprites/Straight horizontal.png').convert_alpha()
+                    x_offset += 110
+                    self.display.blit(tracks, (x_offset, y_offset))
+                #creating a vertical track segment
+                else:
                     tracks = pygame.image.load('C:/NEA/NEA sprites/Straight vertical.png').convert_alpha() 
                     y_offset += 110
                     self.display.blit(tracks, (x_offset, y_offset))
