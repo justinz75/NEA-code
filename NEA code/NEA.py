@@ -359,12 +359,55 @@ class Track:
                         self.display.blit(tracks, (x_offset, y_offset))
             if (x_offset, y_offset) in path_positions:
                 break
-            path_positions.append(x_offset, y_offset)  
+            path_positions.append(x_offset, y_offset)     
+
+class Point:
+    #initialise x and y coordinates
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+class LineSegment:
+    def __init__(self, from_point: 'Point', to_point: 'Point'):
+        #initialise the start and end points of the line segment
+        self.from_point = from_point
+        self.to_point = to_point
+    
+    def intersects(self, another: 'LineSegment') -> bool:
+        #find the orientation of the line segments
+        o1 = orientation(self.from_point, self.to_point, another.from_point)
+        o2 = orientation(self.from_point, self.to_point, another.to_point)
+        o3 = orientation(another.from_point, another.to_point, self.from_point)
+        o4 = orientation(another.from_point, another.to_point, self.to_point)
+        #if the orientations are different, the line segments intersect
+        if o1*o2 < 0 and o3*o4 < 0:
+            return True
+        return False
+
+#Data structures
+class Vector:
+    def __init__(self, x_displacement, y_displacement):
+        #initialise x and y displacements
+        self.displacement = (x_displacement, y_displacement)
+    
+    def add(self, another: 'Vector') -> 'Vector':
+        #returns the sum of two vectors
+        return Vector(self.displacement[0] + another.displacement[0], self.displacement[1] + another.displacement[1])
+    
+    def subtract(self, another: 'Vector') -> 'Vector':
+        #returns the difference between two vectors
+        return Vector(self.displacement[0] - another.displacement[0], self.displacement[1] - another.displacement[1])
+    
+    def cross_product(self, another: 'Vector') -> 'Vector':
+        #returns the cross product of two vectors
+        return self.displacement[0] * another.displacement[1] - self.displacement[1] * another.displacement[0]
 
 class Position_Vector:
-    def __init__(self, start_point, displacement_vector):
-        self.start_point = start_point
-        self.displacement_vector = displacement_vector
+    def __init__(self, x_displacement, y_displacement, origin_x, origin_y):
+        #calls the constructor of the superclass Vector
+        super(Position_Vector, self).__init__(x_displacement, y_displacement)
+        #initialise the origin
+        self.origin = Point(origin_x, origin_y)
 
 class Track:
     def __init__(self, startPos):
@@ -373,13 +416,14 @@ class Track:
         self.points = []#.append(self.startPos)
 
     #point is a tuple of x and y coordinates which gives the x and y displacements
-    def add_Position_Vector(self, aVector, join_to_vector):
+    #def add_Position_Vector(self, aVector, join_to_vector):
 
 def is_point_on_segment(A,B,C):
+    #checks if point C lies on the line segment AB
     if C[0] <= max(A[0], B[0]) and C[0] >= min(A[0], B[0]) and C[1] <= max(A[1], B[1]) and C[1] >= min(A[1], B[1]):
         return True
     return False
-#the line segments P1 to P2 and Q1 to Q2
+
 def orientation(A, B, C):
     """"
     calculates the orientation for the line segment AB to the point C
@@ -388,10 +432,14 @@ def orientation(A, B, C):
             B: a point in 2D-space
             C: a point in 2D-space
     if the result is 0, then we have a straight line (C lies on AB)
+    orientation(A,B,C) = (x2 - x1)(y3 - y1) - (y2 - y1)(x3 - x1)
+    the orientation(A,B,C) of the line segment AB and point C. A(x1, y1), B(x2, y2), C(x3, y3)
     """
     return (B[0] - A[0]) * (C[1] - A[1]) - (B[1] - A[1]) * (C[0] - A[0])
 
+#the line segments P1 to P2 and Q1 to Q2
 def line_segments_intersect(P1, P2, Q1, Q2):
+    #find the orientations of the line segments
     o1 = orientation(P1, P2, Q1)
     o2 = orientation(P1, P2, Q2)
     o3 = orientation(Q1, Q2, P1)
@@ -400,10 +448,6 @@ def line_segments_intersect(P1, P2, Q1, Q2):
     if o1*o2 < 0 and o3*o4 < 0:
         return True
     if o2 == 0 and 
-#the orientation(A,B,C) of the line segment AB and point C. A(x1, y1), B(x2, y2), C(x3, y3)
-#Orientation(A,B,C) = (x2 - x1)(y3 - y1) - (y2 - y1)(x3 - x1)
-#can do it this way or calculate 1/2(abSinC)
-#the line segments P1 to P2 and Q1 to Q2
 
 if __name__ == '__main__':
     #creates object 'game' of class Game
