@@ -155,8 +155,6 @@ class Track:
                 return True
         return False
 
-    from math import cos, sin, radians
-
     def generate_track(self):
         #clear the track
         self.clear_track()
