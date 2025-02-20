@@ -1,16 +1,14 @@
 #import libraries
-import pygame
+
 import sys
-from Track_controller import Track_controller
 
-#game window constants
-SCREEN_WIDTH = 1920
-SCREEN_HEIGHT = 1080
-FPS = 60
+import pygame
 
-#Track segment probabilities
-STRAIGHT_PROBABILITY = 0.55
-TURNS = ['TOP RIGHT', 'TOP LEFT', 'BOTTOM LEFT', 'BOTTOM RIGHT']
+from Back_end import Track, LineSegment, Point
+from Back_end_pygame import Track_Factory
+# game window constants
+from CONSTANTS import SCREEN_WIDTH, SCREEN_HEIGHT, FPS
+
 
 #Game class
 class Game:
@@ -33,9 +31,11 @@ class Game:
         self.game_controls_button = pygame.Rect(633, 520, 615, 100)
         self.quit_button = pygame.Rect(856, 700, 157, 100)
         self.track_size = pygame.Rect(260, 140, 1400, 800)
+        self.scale_factor = 10
         #dictionary of game states
         self.states = {'main menu': self.main_menu, 'menu': self.menu, 'game controls': self.game_controls, 'pause': self.pause, 'high scores': self.high_scores, 'results': self.results, 'play': self.play}
-    
+
+
     def run(self):
         run = True
         while run:
@@ -66,9 +66,9 @@ class Game:
                 self.gameStateManager.set_state('main menu')
             if self.key[pygame.K_c] and self.gameStateManager.get_state() == 'menu':
                 self.gameStateManager.set_state('play')
-                self.screen.fill((255, 255, 255))
-                track = Track_maker()
-                track.draw_track(self.screen)
+                #pygame_track = self.play.generate_track()
+                self.play.draw_track()
+
             #run game states
             self.states[self.gameStateManager.get_state()].run()
             #pygame.draw.rect(self.screen, (0, 0, 0), self.track_size)
@@ -76,6 +76,8 @@ class Game:
             pygame.display.update()
             #ensures game runs at the correct fps
             self.clock.tick(FPS)
+
+
 
 #Game state manager class
 class GameStateManager:
@@ -174,25 +176,51 @@ class Playing:
         self.display = display
         self.gameStateManager = gameStateManager
         #initialise racetrack size
-        self.track_size = pygame.Rect(260, 140, 1400, 800)
+        self.track = None
+        self.pygame_track = None
+    
+    # def generate_and_draw_track(self):
+    #     self.track = Track('Generated Track', 10, 0, 0)
+    #     self.track.generate_track()
+    #     self.pygame_track = Track_Factory.create_pygame_track(self.track, SCREEN_HEIGHT)
+    #     self.display.fill((255, 255, 255))
+    #     self.pygame_track.draw_on_pygame(self.display, 1)
+    def generate_track(self):
+        track = Track('Rectangle', 4, 100, 100)
+        ls = LineSegment(track._start_finish_point, Point(400, 100))
+        ls1 = LineSegment(Point(400, 100), Point(400, 400))
+        ls2 = LineSegment(Point(400, 400), Point(100, 400))
+        track.add_line_segments([ls, ls1, ls2])
+        track.add_final_straight()
+        pygame_track = Track_Factory.create_pygame_track(track, SCREEN_HEIGHT)
+        return pygame_track
+
+
+    def draw_track(self):
+        screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        screen.fill((255, 255, 255))
+        pygame_track = self.generate_track()
+        pygame_track.draw_on_pygame(screen, 1)
+
     #displays the results
     def run(self):
-        pass
-        
-class Track_maker():
-    def __init__(self):
-        #initialise the track controller in the track maker
-        self.__track_controller = Track_controller()
-    
-    def draw_track(self, display):
-        #draw the track
-        self.__track_controller.generate_track()
-        line_segments = self.__track_controller.get_all_line_segments()
-        for segment in line_segments:
-            pygame.draw.line(display, (255, 0, 0), (segment.from_point.x, segment.from_point.y), (segment.to_point.x, segment.to_point.y), 5)
+        # if self.track is None:
+        #     #pygame_track = self.generate_track()
+        #     #self.draw_track(pygame_track)
+        # else:
+        #     #self.pygame_track.draw_on_pygame(self.display, 10)
+        self.draw_track()
 
+        
 if __name__ == '__main__':
     #creates object 'game' of class Game
     game = Game()
     #runs the game
     game.run()
+
+
+    
+    
+
+    
+       
