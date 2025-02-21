@@ -100,7 +100,7 @@ class Pygame_Track(Track):
         for ls in self.get_all_line_segments(): #type: 'LineSegment'
             bezier_points = ls.bezier_points
             for i in range(len(bezier_points)):
-                pygame.draw.circle(screen, BLACK, (bezier_points[i].x, bezier_points[i].y), TRACK_WIDTH)
+                pygame.draw.circle(screen, TRACK_COLOUR, (bezier_points[i].x, bezier_points[i].y), TRACK_WIDTH)
             
     # def draw_bezier_track(self, screen):
     #     for ls in self._line_segments:
@@ -119,24 +119,24 @@ class Track_Factory:
             pygame_track.add_line_segment(pygame_line_segment)
         return pygame_track
 
-class Car_Sprite(pygame.sprite.Sprite):
-    def __init__(self, colour, initial_pos: 'Point'):
-        super().__init__()
-        self.colour = colour
-        self.screen_height = SCREEN_HEIGHT
-        self.screen_width = SCREEN_WIDTH
-        self.image = pygame.Surface([10, 10])
-        self.rect = self.image.get_rect()
-        self.initial_pos = initial_pos
-        self.rect.x = self.initial_pos.x
-        self.rect.y = self.initial_pos.y
-
-    def update(self, new_pos: 'Point'):
-        self.rect.x = new_pos.x
-        self.rect.y = new_pos.y
+# class Car_Sprite(pygame.sprite.Sprite):
+#     def __init__(self, colour, initial_pos: 'Point'):
+#         super().__init__()
+#         self.colour = colour
+#         self.screen_height = SCREEN_HEIGHT
+#         self.screen_width = SCREEN_WIDTH
+#         self.image = pygame.Surface([10, 10])
+#         self.rect = self.image.get_rect()
+#         self.initial_pos = initial_pos
+#         self.rect.x = self.initial_pos.x
+#         self.rect.y = self.initial_pos.y
+#
+#     def update(self, new_pos: 'Point'):
+#         self.rect.x = new_pos.x
+#         self.rect.y = new_pos.y
 
 class AI_car:
-    def __init__(self, difficulty, colour, pygame_track: 'Pygame_Track', screen):
+    def __init__(self, screen, difficulty, colour, pygame_track: 'Pygame_Track'):
         self.pygame_track = pygame_track
         self.screen = screen
         #current bezier and straight index
@@ -144,6 +144,8 @@ class AI_car:
         self.current_bezier_index = 0
         self.colour = colour
         self.difficulty = difficulty
+        #gets previous position of car
+        self.save_current_pos = None
         #gets current position of the car
         self.current_pos = self.get_next_pos()
         #ensures thread-safe operations
@@ -151,7 +153,7 @@ class AI_car:
         #track if the thread is running
         self.running = False
         self.thread = None
-        self.sprite = Car_Sprite(colour, self.current_pos)
+        #self.sprite = Car_Sprite(colour, self.current_pos)
 
     def start_animation(self):
         #start thread and animation of car
@@ -169,6 +171,9 @@ class AI_car:
         #continuously updates car while thread is running
         while self.running:
             with self.lock:
+                #remove car in previous position
+                if self.save_current_pos is not None:
+                    pygame.draw.circle(self.screen, TRACK_COLOUR, (self.save_current_pos.x, self.save_current_pos.y), 10, 2)
                 #gets next position of the car
                 new_position = self.get_next_pos()
                 self.current_pos = new_position
@@ -187,6 +192,7 @@ class AI_car:
         straights = self.pygame_track.get_all_line_segments()
         current_straight = straights[self.current_straight_index] #type: 'Pygame_LineSegment'
         current_bezier = current_straight.bezier_points[self.current_bezier_index] #type: 'Pygame_Point'
+        self.save_current_pos = current_bezier
         if current_bezier == current_straight.to_point:  #end of the current straight
             #reached the end of current line segment - go to the next set of bezier points
             self.current_straight_index = (self.current_straight_index + 1) % len(straights)
@@ -194,42 +200,84 @@ class AI_car:
         else:
             self.current_bezier_index = (self.current_bezier_index + 1) % len(current_straight.bezier_points)
 
-        #depending on the difficult, go off track a little
+        #depending on the difficulty, go off track a little
         if self.difficulty == 0: #hard
             return current_bezier
         elif self.difficulty == 1: #medium
-            if random.randint(1,50) == 1:
+            if random.randint(1, 50) == 1:
                 return Point(current_bezier.x + 3, current_bezier.y + 3)
             else:
                 return current_bezier
         else: #easy
-            if random.randint(1,25) == 1:
+            if random.randint(1, 25) == 1:
                 return Point(current_bezier.x + 3, current_bezier.y + 3)
             else:
                 return current_bezier
 
+class Human_Car:
+    def __init__(self, screen, speed, position: 'Pygame_Point', upgrade_speed = 15):
+        self.screen = screen
+        self.speed = speed
+        self.upgrade_speed = upgrade_speed
+        self.position = position
+        self.rectangle = pygame.rect.Rect(position.x, position.y, 10, 10)
+        self.colour = HUMAN_CAR_COLOUR
+        self.lock = threading.Lock()
+        #tells us direction in x and y, with 0, 0
+        self.direction = [0, 0]
+        self.running = False
+        self.thread = None
 
+    def update_pos(self):
+        while self.running:
+            with self.lock:
+                dx, dy = self.direction[0], self.direction[1]
+                self.position.x, self.position.y = dx * self.speed, dy * self.speed
+            time.sleep(1/(FPS+self.upgrade_speed))
+
+    def set_direction(self, new_direction):
+        with self.lock:
+            self.direction = new_direction
+
+    def get_pos(self):
+        with self.lock:
+            return self.position.x, self.position.y
+
+    def draw(self):
+        pygame.draw.circle(self.screen, self.colour, self.get_pos(), 10, 10)
+
+    def start(self):
+        if not self.running:
+            self.running = True
+            self.thread = threading.Thread(target=self.update_pos)
+            self.thread.start()
+
+    def stop(self):
+        self.running = False
+        if self.thread:
+            self.thread.join()
 
 class Race:
     def __init__(self, screen, screen_height, laps, difficulty):
         self.screen = screen
         self.screen_height = screen_height
-        self.cars = []
+        self.ai_cars = []
         track = Track.generate_track('Track', 10, 800, 500)
         self.pygame_track = Track_Factory.create_pygame_track(track, self.screen_height)
-        if difficulty == 0: # hard race
-            self.cars.append(AI_car(0, RED, self.pygame_track, self.screen))
-            self.cars.append(AI_car(1, BLUE, self.pygame_track, self.screen))
-            self.cars.append(AI_car(1, BLUE, self.pygame_track, self.screen))
-            self.cars.append(AI_car(2, GREEN, self.pygame_track, self.screen))
-        elif difficulty == 1:
-            self.cars.append(AI_car(1, BLUE, self.pygame_track, self.screen))
-            self.cars.append(AI_car(1, BLUE, self.pygame_track, self.screen))
-            self.cars.append(AI_car(2, GREEN, self.pygame_track, self.screen))
-            self.cars.append(AI_car(2, GREEN, self.pygame_track, self.screen))
-        else:
-            self.cars.append(AI_car(2, GREEN, self.pygame_track, self.screen))
-            self.cars.append(AI_car(2, GREEN, self.pygame_track, self.screen))
+        self.human_car = Human_Car(screen, 10, self.pygame_track.get_start_finish_point())
+        if difficulty == 0: #hard race
+            self.ai_cars.append(AI_car(self.screen, 0, RED, self.pygame_track))
+            self.ai_cars.append(AI_car(self.screen, 1, BLUE, self.pygame_track))
+            self.ai_cars.append(AI_car(self.screen, 1, BLUE, self.pygame_track))
+            self.ai_cars.append(AI_car(self.screen, 2, GREEN, self.pygame_track))
+        elif difficulty == 1: #medium race
+            self.ai_cars.append(AI_car(self.screen, 1, BLUE, self.pygame_track))
+            self.ai_cars.append(AI_car(self.screen, 1, BLUE, self.pygame_track))
+            self.ai_cars.append(AI_car(self.screen, 2, GREEN, self.pygame_track))
+            self.ai_cars.append(AI_car(self.screen, 2, GREEN, self.pygame_track))
+        else: #easy race
+            self.ai_cars.append(AI_car(self.screen, 2, GREEN, self.pygame_track))
+            self.ai_cars.append(AI_car(self.screen, 2, GREEN, self.pygame_track))
         self.laps = laps
         self.running = False
         self.difficulty = difficulty
@@ -237,12 +285,14 @@ class Race:
     def begin_race(self):
         #starts race by drawing track and animating AI cars
         self.pygame_track.draw_track(self.screen)
-        for car in self.cars:
+        self.human_car.start()
+        for car in self.ai_cars:
             car.start_animation()
 
     def stop_race(self):
         #stops race by stopping all car animations
-        for car in self.cars:
+        self.human_car.stop()
+        for car in self.ai_cars:
             car.stop_animation()
 
     def run_game(self):
@@ -255,10 +305,21 @@ class Race:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
+                else:
+                    if pygame.key.get_pressed()[pygame.K_w]:
+                        self.human_car.direction = [0, 1]
+                    elif pygame.key.get_pressed()[pygame.K_s]:
+                        self.human_car.direction = [0, -1]
+                    elif pygame.key.get_pressed()[pygame.K_a]:
+                        self.human_car.direction = [-1, 0]
+                    elif pygame.key.get_pressed()[pygame.K_d]:
+                        self.human_car.direction = [1, 0]
             #draw each AI car at its current position
-            for AI_car in self.cars:
+            for AI_car in self.ai_cars:
                 x_pos, y_pos = AI_car.current_pos.x, AI_car.current_pos.y
                 pygame.draw.circle(screen, AI_car.colour, (x_pos, y_pos), 5, 2)
+            self.human_car.update_pos()
+            self.human_car.draw()
             #updates screen
             pygame.display.flip()
             clock.tick(FPS)

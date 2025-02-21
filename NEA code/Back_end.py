@@ -310,10 +310,12 @@ class Track:
         #ensure the track doesn't hit a dead end
         test_point = current_point
         for _ in range(5): #look ahead 5 steps
-            length = random.randint(50, 200)
-            angle_change = random.randint(-90, 90) #smaller angle changes
+            #randomly choose a length and angle
+            length = random.randint(MIN_STRAIGHT_LENGTH, MAX_STRAIGHT_LENGTH)
+            angle_change = random.randint(-120, 120) 
             angle = (previous_angle + angle_change) % 360
 
+            #x and y coordinates are calculated
             new_x = int(test_point.x + length * cos(radians(angle)))
             new_y = int(test_point.y + length * sin(radians(angle)))
 
