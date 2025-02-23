@@ -6,6 +6,8 @@ from CONSTANTS import *
 
 distance = randint(1, 5)
 
+
+
 class Point:
     #initialise x and y coordinates
     def __init__(self, x, y):
@@ -23,6 +25,43 @@ class Point:
         sum_of_squares = (self.x - another.x) ** 2 + (self.y - another.y) ** 2
         return sqrt(sum_of_squares)
 
+#Data structures
+class Vector:
+    def __init__(self, from_point: 'Point', to_point: 'Point'):
+        #initialise x and y displacements
+        self.from_point = from_point
+        self.to_point = to_point
+        self.dx = self.to_point.x - self.from_point.x
+        self.dy = self.to_point.y - self.from_point.y
+
+    def add(self):
+        #returns the sum of two vectors
+        return Vector(self.self.from_point.x + self.to_point.x, self.from_point.y + self.to_point.y)
+
+    def subtract(self):
+        #returns the difference between two vectors
+        return Vector(self.self.from_point.x - self.to_point.x, self.from_point.y - self.to_point.y)
+
+    def dot_product(self, another: 'Vector'):
+        #returns the dot product of two vectors
+        return self.dx * another.dx + self.dy * another.dy
+
+    def sum_squares(self):
+        return self.dx ** 2 + self.dy ** 2
+
+    def get_length(self):
+        return sqrt(self.sum_squares())
+
+    def cross_product(self, another: 'Vector'):
+        #returns the cross product of two vectors
+        return self.dx * another.dy - self.dy * another.dx
+
+class Position_Vector(Vector):
+    def __init__(self, x_displacement, y_displacement, origin_x, origin_y):
+        #calls the constructor of the superclass Vector
+        super(Position_Vector, self).__init__(x_displacement, y_displacement)
+        #initialise the origin
+        self.origin = Point(origin_x, origin_y)
 class LineSegment:
     def __init__(self, from_point: 'Point', to_point: 'Point'):
         #initialise the start and end points of the line segment
@@ -31,10 +70,22 @@ class LineSegment:
         self.__get_mid_point()
         self.__control_point(distance)
         self.bezier_points = self.calculate_by_bezier()
+        self.segment_vector = Vector(self.from_point, self.to_point)
 
     def __str__(self):
         return f"{str(self.from_point)} --> {str(self.to_point)}"
-    
+
+    def distance_to(self, p: 'Point'):
+        Ap_Vector = Vector(self.from_point, p)
+        Ap_dot_prod = Ap_Vector.dot_product(self.segment_vector)
+        t = Ap_dot_prod // self.segment_vector.sum_squares()
+        t = max(0, min(1, t))
+        closest_x = self.from_point.x + t * (self.to_point.x - self.from_point.x)
+        closest_y = self.from_point.y + t * (self.to_point.y - self.from_point.y)
+        distance_x = closest_x - p.x
+        distance_y = closest_y - p.y
+        return sqrt(distance_x ** 2 + distance_y ** 2)
+
     def get_transform(self, screen_height):
         start_point = self.from_point.get_transform(screen_height)
         end_point = self.to_point.get_transform(screen_height)
@@ -186,33 +237,6 @@ class LineSegment:
 
         return bezier_points
 
-#Data structures
-class Vector:
-    def __init__(self, from_point: 'Point', to_point: 'Point'):
-        #initialise x and y displacements
-        self.from_point = from_point
-        self.to_point = to_point
-        self.dx = self.to_point.x - self.from_point.x
-        self.dy = self.to_point.y - self.from_point.y
-
-    def add(self):
-        #returns the sum of two vectors
-        return Vector(self.self.from_point.x + self.to_point.x, self.from_point.y + self.to_point.y)
-
-    def subtract(self):
-        #returns the difference between two vectors
-        return Vector(self.self.from_point.x - self.to_point.x, self.from_point.y - self.to_point.y)
-
-    def cross_product(self, another: 'Vector'):
-        #returns the cross product of two vectors
-        return self.dx * another.dy - self.dy * another.dx
-
-class Position_Vector(Vector):
-    def __init__(self, x_displacement, y_displacement, origin_x, origin_y):
-        #calls the constructor of the superclass Vector
-        super(Position_Vector, self).__init__(x_displacement, y_displacement)
-        #initialise the origin
-        self.origin = Point(origin_x, origin_y)
 
 class Track:
     def __init__(self, name, number_of_straights, start_x, start_y):
@@ -309,7 +333,7 @@ class Track:
     def is_valid_next_segment(temp_track, current_point, previous_angle):
         #ensure the track doesn't hit a dead end
         test_point = current_point
-        for _ in range(5): #look ahead 5 steps
+        for _ in range(6): #look ahead 6 steps
             #randomly choose a length and angle
             length = random.randint(MIN_STRAIGHT_LENGTH, MAX_STRAIGHT_LENGTH)
             angle_change = random.randint(-120, 120) 
@@ -387,7 +411,17 @@ class Track:
             points.append(self._line_segments[-1].to_point)
         return points
 
+    def get_closest_line_segment(self, p:'Point'):
+        distances = [ls.distance_to(p) for ls in self.get_all_line_segments()]
+        return min(distances)
 
-
-
+#
+# ls = LineSegment(Point(0,0), Point(100, 0))
+# ls1 = LineSegment(Point(100,0), Point(100, 100))
+# ls2 = LineSegment(Point(100, 100), Point(0, 100))
+# test_track = Track('name', 4, 0, 0)
+# ls4 = [ls, ls1, ls2]
+# test_track.add_line_segments(ls4)
+# test_track.add_final_straight()
+# print(test_track.get_closest_line_segment(Point(100, 150)))
 
